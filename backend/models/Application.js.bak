@@ -1,0 +1,424 @@
+const mongoose = require('mongoose');
+
+// Schema for Cloudinary document references
+const DocumentSchema = new mongoose.Schema({
+  url: {
+    type: String,
+    required: true
+  },
+  public_id: {
+    type: String,
+    required: true
+  },
+  format: String,
+  size: Number,
+  resource_type: {
+    type: String,
+    enum: ['image', 'raw'],
+    default: 'image'
+  }
+}, { _id: false });
+
+// Schema for documents sub-document
+const DocumentsSchema = new mongoose.Schema({
+  idProof: DocumentSchema,
+  addressProof: DocumentSchema,
+  bankStatement: DocumentSchema,
+  experienceCertificate: DocumentSchema,
+  premisesPhoto: DocumentSchema
+}, { _id: false });
+
+const applicationSchema = new mongoose.Schema({
+  // Step 1: Purpose
+  purposeAcknowledged: {
+    type: Boolean,
+    required: [true, 'Please acknowledge the purpose of this form'],
+  },
+  
+  // Step 2: Instructions
+  instructionsAcknowledged: {
+    type: Boolean,
+    required: [true, 'Please acknowledge the instructions'],
+  },
+  
+  // Step 3: Basic Details
+  fullName: {
+    type: String,
+    required: [true, 'Please enter your full name'],
+    trim: true,
+    index: true,
+  },
+  age: {
+    type: Number,
+    required: [true, 'Please enter your age'],
+    min: [18, 'You must be at least 18 years old'],
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other', 'prefer-not-to-say'],
+    required: [true, 'Please select your gender'],
+  },
+  mobileNumber: {
+    type: String,
+    required: [true, 'Please enter your mobile number'],
+    trim: true,
+    index: true,
+  },
+  email: {
+    type: String,
+    required: [true, 'Please enter your email'],
+    trim: true,
+    lowercase: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email address'],
+    index: true,
+  },
+  currentAddress: {
+    type: String,
+    required: [true, 'Please enter your current address'],
+    trim: true,
+  },
+  permanentAddress: {
+    type: String,
+    trim: true,
+  },
+  highestQualification: {
+    type: String,
+    required: [true, 'Please enter your highest qualification'],
+    trim: true,
+  },
+  currentOccupation: {
+    type: String,
+    required: [true, 'Please enter your current occupation'],
+    trim: true,
+  },
+  maritalStatus: {
+    type: String,
+    enum: ['married', 'unmarried'],
+    required: [true, 'Please select your marital status'],
+  },
+  familyMembers: {
+    type: Number,
+    required: [true, 'Please enter number of family members'],
+    min: [1, 'There must be at least one family member'],
+  },
+  familyInEducation: {
+    type: String,
+    trim: true,
+  },
+  
+  // Step 4: Business / Investment Details
+  targetCity: {
+    type: String,
+    required: [true, 'Please enter target city/locality'],
+    trim: true,
+    index: true,
+  },
+  proposedPremises: {
+    type: String,
+    required: [true, 'Please provide details about proposed premises'],
+    trim: true,
+  },
+  nearbySchools: {
+    type: Number,
+    required: [true, 'Please enter number of nearby schools'],
+    min: [0, 'Number of schools cannot be negative'],
+  },
+  nearbyCoachingInstitutes: {
+    type: Number,
+    required: [true, 'Please enter number of nearby coaching institutes'],
+    min: [0, 'Number cannot be negative'],
+  },
+  knownInstituteNearby: {
+    type: String,
+    trim: true,
+  },
+  targetClasses: [{
+    type: String,
+    enum: ['6-8', '9-10', '11-12-science', '11-12-commerce', 'jee', 'neet', 'foundation-olympiad', 'other'],
+  }],
+  otherTargetClass: {
+    type: String,
+    trim: true,
+  },
+  teachingTeamAvailable: {
+    type: Boolean,
+    required: [true, 'Please specify if you have a teaching team'],
+  },
+  numberOfTeachers: {
+    type: Number,
+    min: [0, 'Number of teachers cannot be negative'],
+  },
+  teamOpenToTraining: {
+    type: Boolean,
+  },
+  managementType: {
+    type: String,
+    enum: ['self', 'team'],
+    required: [true, 'Please specify management type'],
+  },
+  investmentRange: {
+    type: String,
+    enum: ['5-7', '7-10', '10-15', '15+'],
+    required: [true, 'Please select investment range'],
+  },
+  needsFinancialAssistance: {
+    type: Boolean,
+    required: [true, 'Please specify if you need financial assistance'],
+  },
+  financialAssistanceAmount: {
+    type: Number,
+    min: [0, 'Amount cannot be negative'],
+  },
+  feeStructure: {
+    class6to8: { type: Number, min: 0 },
+    class9to10: { type: Number, min: 0 },
+    class11to12: { type: Number, min: 0 },
+    entranceTest: { type: Number, min: 0 },
+  },
+  
+  // Step 5: Operations and Teams Details
+  previousExperience: {
+    type: String,
+    trim: true,
+  },
+  expectedStudents: {
+    type: Number,
+    min: [1, 'Expected students must be at least 1'],
+  },
+  availableStaff: {
+    type: Number,
+    min: [0, 'Number cannot be negative'],
+  },
+  classSchedule: {
+    type: String,
+    trim: true,
+  },
+  hybridModel: {
+    type: Boolean,
+  },
+  
+  // Step 6: Branding and Marketing
+  marketingBudget: {
+    type: Number,
+    min: [0, 'Budget cannot be negative'],
+  },
+  localNetwork: {
+    type: String,
+    trim: true,
+  },
+  
+  // Step 7: Seriousness, Mindset & Alignment
+  timeframe: {
+    type: String,
+    enum: ['1-month', '1-3-months', '3-6-months', '6+-months', null],
+    default: null,
+  },
+  motivation: [{
+    type: String,
+    enum: ['income', 'passion', 'business-expansion', 'social-impact', 'other'],
+  }],
+  otherMotivation: {
+    type: String,
+    trim: true,
+  },
+  fullTimeDedication: {
+    type: Boolean,
+  },
+  educationBeliefs: {
+    characterBuilding: Boolean,
+    stressFreeLearning: Boolean,
+    newMethodologies: Boolean,
+    transparentCommunication: Boolean,
+  },
+  classroomEnvironment: {
+    type: String,
+    enum: ['friendly-disciplined', 'result-pressure', null],
+    default: null,
+  },
+  
+  // Documents stored in Cloudinary
+  documents: {
+    type: DocumentsSchema,
+    default: {}
+  },
+      trim: true,
+      default: '',
+    },
+    premisesPhoto: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+  },
+  
+  // Status and Tracking
+  status: {
+    type: String,
+    enum: ['pending', 'under-review', 'approved', 'rejected'],
+    default: 'pending',
+    index: true,
+  },
+  notes: [{
+    content: {
+      type: String,
+      required: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  }],
+  
+  // Audit Fields
+  ipAddress: {
+    type: String,
+    trim: true,
+  },
+  userAgent: {
+    type: String,
+    trim: true,
+  },
+  
+  // Timestamps
+  submittedAt: {
+    type: Date,
+    default: Date.now,
+    index: true,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  reviewedAt: {
+    type: Date,
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+});
+
+// Indexes for better query performance
+applicationSchema.index({ status: 1, submittedAt: -1 });
+applicationSchema.index({ email: 1 }, { unique: true, sparse: true });
+applicationSchema.index({ mobileNumber: 1 }, { unique: true, sparse: true });
+applicationSchema.index({ 'documents.idProof': 1 });
+
+// Text index for search functionality
+applicationSchema.index(
+  { 
+    fullName: 'text',
+    email: 'text',
+    mobileNumber: 'text',
+    targetCity: 'text',
+    currentAddress: 'text',
+    'documents.idProof': 'text'
+  },
+  {
+    weights: {
+      fullName: 10,
+      email: 8,
+      mobileNumber: 8,
+      targetCity: 5,
+      currentAddress: 3,
+      'documents.idProof': 2
+    },
+    name: 'application_search_index',
+    default_language: 'english',
+    language_override: 'none',
+  }
+);
+
+// Virtual for application URL
+applicationSchema.virtual('url').get(function() {
+  return `/api/applications/${this._id}`;
+});
+
+// Method to get a summary of the application
+applicationSchema.methods.getSummary = function() {
+  return {
+    id: this._id,
+    fullName: this.fullName,
+    email: this.email,
+    mobileNumber: this.mobileNumber,
+    targetCity: this.targetCity,
+    status: this.status,
+    submittedAt: this.submittedAt,
+    url: this.url
+  };
+};
+
+// Pre-save hook to update timestamps and perform validation
+applicationSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  
+  // If status is being updated to approved/rejected, set reviewedAt
+  if (this.isModified('status') && ['approved', 'rejected'].includes(this.status)) {
+    this.reviewedAt = new Date();
+    // Note: reviewedBy would need to be set by the controller
+  }
+  
+  next();
+});
+
+// Static method to get application stats
+applicationSchema.statics.getStats = async function() {
+  const stats = await this.aggregate([
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: '$count' },
+        byStatus: {
+          $push: {
+            status: '$_id',
+            count: '$count'
+          }
+        }
+      }
+    },
+    {
+      $addFields: {
+        byStatus: {
+          $arrayToObject: {
+            $map: {
+              input: '$byStatus',
+              as: 'status',
+              in: {
+                k: '$$status.status',
+                v: '$$status.count'
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        total: 1,
+        byStatus: 1
+      }
+    }
+  ]);
+
+  return stats.length > 0 ? stats[0] : { total: 0, byStatus: {} };
+};
+
+// Create and export the model
+const Application = mongoose.model('Application', applicationSchema);
+
+module.exports = Application;
