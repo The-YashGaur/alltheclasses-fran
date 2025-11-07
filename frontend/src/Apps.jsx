@@ -110,7 +110,7 @@ function Apps() {
       }
       
   
-      const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const apiBase = process.env.REACT_APP_API_URL || 'https://alltheclasses-fran.onrender.com';
       const apiUrl = `${apiBase.replace(/\/$/, '')}/api/applications`;
 console.log(`📤 Sending request to: ${apiUrl}`);
       // Add a timestamp to prevent caching
