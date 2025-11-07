@@ -1,5 +1,5 @@
 // App.js
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   ThemeProvider,
   createTheme,
@@ -13,8 +13,16 @@ import {
   CircularProgress,
   Alert,
   Typography,
-  useMediaQuery
+  useMediaQuery,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Menu,
+  MenuItem,
+  Avatar,
+  Link as MuiLink
 } from '@mui/material';
+import { Menu as MenuIcon } from '@mui/icons-material';
 import { orange } from '@mui/material/colors';
 
 // Import steps
@@ -109,6 +117,28 @@ function App() {
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ success: false, message: '' });
+
+  // navbar state
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  // show/hide navbar on scroll
+  const [showNavbar, setShowNavbar] = useState(true);
+  const lastScrollY = useRef(0);
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY || window.pageYOffset;
+      // if scrolled down more than 40px and currentY > last => hide
+      if (currentY > lastScrollY.current && currentY > 40) {
+        setShowNavbar(false);
+      } else {
+        setShowNavbar(true);
+      }
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const [formData, setFormData] = useState({
     purposeAcknowledged: false,
@@ -306,9 +336,105 @@ function App() {
     }
   };
 
+  // NAVBAR handlers
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = () => setAnchorEl(null);
+
+  // Example nav links
+  const navLinks = [
+    { label: 'About', href: '#' },
+    { label: 'ROI', href: '#' },
+    { label: 'Investment', href: '#' },
+    { label: 'Contact', href: '#' }
+  ];
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+
+      {/* NAVBAR */}
+      <AppBar
+        position="sticky"
+        elevation={2}
+        sx={{
+          // semi-opaque/opaque background
+          backgroundColor: 'rgba(255,255,255,0.95)',
+          color: 'text.primary',
+          // hide when showNavbar is false (translateY)
+          transform: showNavbar ? 'translateY(0)' : 'translateY(-110%)',
+          transition: 'transform 300ms ease, background-color 200ms ease',
+          // give it a subtle blur (optional)
+          backdropFilter: 'saturate(120%) blur(6px)'
+        }}
+      >
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pl: { xs: 2, sm: 6 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: { xs: 1, sm: 2 } }}>
+            <Avatar
+              src="/logo.png"
+              alt="All The Classes Logo"
+              sx={{
+                width: { xs: 64, sm: 72 },   // make logo a bit bigger
+                height: { xs: 64, sm: 72 },
+                border: '2px solid',
+                borderColor: 'primary.main'
+              }}
+            />
+            <Box>
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{ fontWeight: 800, color: 'primary.main' }} // "All The Classes" in orange 500
+              >
+                All The Classes
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Desktop links */}
+          {!isMobile ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {navLinks.map((link) => (
+                <Button
+                  key={link.label}
+                  component={MuiLink}
+                  href={link.href}
+                  underline="none"
+                  color="inherit"
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    color: 'text.primary'
+                  }}
+                >
+                  {link.label}
+                </Button>
+              ))}
+            </Box>
+          ) : (
+            // Mobile menu
+            <IconButton edge="end" color="inherit" onClick={handleMenuOpen} aria-label="menu">
+              <MenuIcon />
+            </IconButton>
+          )}
+
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          >
+            {navLinks.map((link) => (
+              <MenuItem key={link.label} onClick={handleMenuClose} component="a" href={link.href}>
+                {link.label}
+              </MenuItem>
+            ))}
+          </Menu>
+        </Toolbar>
+      </AppBar>
+
       <Container maxWidth="lg" sx={{ py: { xs: 1, sm: 2, md: 4 } }}>
         <Box
           sx={{
@@ -399,7 +525,8 @@ function App() {
               </Alert>
             )}
 
-            {/* Fixed bottom action bar; responsive layout and safe spacing */}
+            {/* Fixed bottom action bar (hide after successful submission) */}
+          {!submitStatus.success && (
             <Box
               sx={{
                 position: { xs: 'fixed', sm: 'fixed' },
@@ -456,6 +583,7 @@ function App() {
                 )}
               </Box>
             </Box>
+          )}
 
             {/* spacer to prevent content being hidden by fixed bar */}
             <Box sx={{ height: { xs: 120, sm: 90 } }} />
