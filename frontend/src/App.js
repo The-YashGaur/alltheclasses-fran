@@ -1,3 +1,4 @@
+// App.js
 import React, { useState, useCallback } from 'react';
 import {
   ThemeProvider,
@@ -104,6 +105,7 @@ const appendFormData = (fd, data, parentKey = '') => {
 
 function App() {
   const isMobile = useMediaQuery('(max-width:600px)');
+  const isSmall = useMediaQuery('(max-width:900px)');
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ success: false, message: '' });
@@ -221,12 +223,12 @@ function App() {
     if (activeStep === 0 && !formData.purposeAcknowledged) return;
     if (activeStep === 1 && !formData.instructionsAcknowledged) return;
     setActiveStep((prev) => Math.min(prev + 1, steps.length - 1));
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
     setActiveStep((prev) => Math.max(0, prev - 1));
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async (e) => {
@@ -263,10 +265,6 @@ function App() {
         }
       });
 
-      // Also (optionally) append some top-level simple fields to help backend logs/debug
-      // e.g. fd.append('fullName', formData.fullName || '');
-      // But we rely on 'formData' JSON mainly.
-
       const response = await fetch('http://localhost:5000/api/applications', {
         method: 'POST',
         body: fd
@@ -278,6 +276,7 @@ function App() {
 
       setSubmitStatus({ success: true, message: 'Form submitted successfully!' });
       setActiveStep((prev) => prev + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Error submitting form:', error);
       setSubmitStatus({ success: false, message: error.message || 'Failed to submit form' });
@@ -310,19 +309,82 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 } }}>
-        <Box sx={{ backgroundColor: 'white', p: 4, borderRadius: 2, boxShadow: 3, mb: 4 }}>
-          <Typography variant="h4" align="center" gutterBottom>
-            Franchise Application Form
-          </Typography>
+      <Container maxWidth="lg" sx={{ py: { xs: 1, sm: 2, md: 4 } }}>
+        <Box
+          sx={{
+            backgroundColor: 'white',
+            p: { xs: 2, sm: 3, md: 4 },
+            borderRadius: { xs: 1, sm: 2 },
+            boxShadow: { xs: 1, sm: 3 },
+            mb: 4,
+            // ensure the box fits on smaller devices with comfortable horizontal padding
+            px: { xs: 2, sm: 3, md: 6 }
+          }}
+        >
+            {/* 🖼️ Image Banner Above the Title - responsive heights and lazy loading */}
+            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
+              <Box
+                component="img"
+                src="/banner.jpg"
+                alt="Franchise Application Banner"
+                loading="lazy"
+                sx={{
+                  width: '100%',
+                  maxWidth: 1100,
+                  height: { xs: 140, sm: 180, md: 250 },
+                  objectFit: 'cover',
+                  borderRadius: 2,
+                  mb: 2,
+                  boxShadow: 2
+                }}
+              />
+            </Box>
 
-          <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
+            {/* 🧾 Page Title */}
+            <Typography
+              variant="h4"
+              align="center"
+              gutterBottom
+              sx={{
+                fontWeight: 600,
+                color: 'primary.main',
+                mb: { xs: 2, sm: 4 }
+              }}
+            >
+              Franchise Application Form
+            </Typography>
+
+          {/* Stepper wrapper - allow horizontal scroll on narrow screens */}
+          <Box sx={{
+            mb: 4,
+            // keep stepper within a horizontally scrollable container on small devices
+            overflowX: 'auto',
+            px: { xs: 1, sm: 0 },
+            '&::-webkit-scrollbar': { height: 8 },
+          }}>
+            <Stepper
+              activeStep={activeStep}
+              alternativeLabel={!isSmall}
+              sx={{
+                minWidth: 320,
+                maxWidth: '100%',
+                '& .MuiStepLabel-label': {
+                  whiteSpace: 'nowrap',
+                  fontSize: { xs: '0.7rem', sm: '0.85rem' }
+                },
+                // reduce icon & label sizes on small screens
+                '& .MuiStepIcon-root': {
+                  fontSize: { xs: 18, sm: 24 }
+                }
+              }}
+            >
+              {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+          </Box>
 
           <Box component="form" onSubmit={handleSubmit} noValidate>
             {getStepContent(activeStep)}
@@ -337,9 +399,10 @@ function App() {
               </Alert>
             )}
 
+            {/* Fixed bottom action bar; responsive layout and safe spacing */}
             <Box
               sx={{
-                position: 'fixed',
+                position: { xs: 'fixed', sm: 'fixed' },
                 bottom: 0,
                 left: 0,
                 right: 0,
@@ -351,39 +414,50 @@ function App() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: { xs: 1, sm: 0 },
-                zIndex: 1000,
+                zIndex: 1400,
                 boxShadow: '0 -2px 10px rgba(0,0,0,0.05)'
               }}
             >
-              <Button variant="outlined" disabled={activeStep === 0} onClick={handleBack} fullWidth={isMobile}>Back</Button>
+              <Box sx={{ width: { xs: '100%', sm: '30%' }, pr: { sm: 1 } }}>
+                <Button variant="outlined" disabled={activeStep === 0} onClick={handleBack} fullWidth={isMobile}>
+                  Back
+                </Button>
+              </Box>
 
-              {activeStep === steps.length - 1 ? (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  type="submit"
-                  size="large"
-                  disabled={isSubmitting}
-                  startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
-                  fullWidth={isMobile}
-                  sx={{ minWidth: { sm: 200 } }}
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
-                </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleNext}
-                  size="large"
-                  disabled={(activeStep === 0 && !formData.purposeAcknowledged) || (activeStep === 1 && !formData.instructionsAcknowledged)}
-                  fullWidth={isMobile}
-                >
-                  Next
-                </Button>
-              )}
+              <Box sx={{ width: { xs: '100%', sm: '70%' }, display: 'flex', justifyContent: 'flex-end' }}>
+                {activeStep === steps.length - 1 ? (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    type="submit"
+                    size="large"
+                    disabled={isSubmitting}
+                    startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
+                    fullWidth={isMobile}
+                    sx={{ minWidth: { sm: 200 } }}
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleNext}
+                    size="large"
+                    disabled={(activeStep === 0 && !formData.purposeAcknowledged) || (activeStep === 1 && !formData.instructionsAcknowledged)}
+                    fullWidth={isMobile}
+                    sx={{
+                      minWidth: { sm: 200 },
+                      ml: { sm: 2 }
+                    }}
+                  >
+                    Next
+                  </Button>
+                )}
+              </Box>
             </Box>
 
+            {/* spacer to prevent content being hidden by fixed bar */}
             <Box sx={{ height: { xs: 120, sm: 90 } }} />
           </Box>
         </Box>
