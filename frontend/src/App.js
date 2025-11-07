@@ -295,7 +295,7 @@ function App() {
         }
       });
 
-      const response = await fetch('http://localhost:5000/api/applications', {
+      const response = await fetch('https://alltheclasses-fran.onrender.com/', {
         method: 'POST',
         body: fd
       });
