@@ -1,4 +1,4 @@
-// App.js
+import banner from '../src/assets/Banner.jpg';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   ThemeProvider,
@@ -451,7 +451,7 @@ function App() {
             <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
               <Box
                 component="img"
-                src="/banner.jpg"
+                src={banner}
                 alt="Franchise Application Banner"
                 loading="lazy"
                 sx={{
