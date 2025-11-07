@@ -15,6 +15,23 @@ console.log('Environment Variables:', {
 
 const app = express();
 
+const allowedOrigins = [
+  'https://alltheclasses-fran.vercel.app/', // replace with your actual Vercel URL
+  'https://www.yourdomain.com',       // optional custom GoDaddy domain
+  'http://localhost:3000',            // keep for local testing
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
+
 // Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
